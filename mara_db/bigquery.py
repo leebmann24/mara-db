@@ -32,8 +32,9 @@ def bigquery_cursor_context(db: typing.Union[str, mara_db.dbs.BigQueryDB]) \
     """Creates a context with a bigquery cursor for a database alias"""
     client = bigquery_client(db)
 
-    from google.cloud import bigquery
-    connection = bigquery.dbapi.Connection(client)
+    from google.cloud.bigquery.dbapi.connection import Connection
+
+    connection = Connection(client)
     cursor = connection.cursor()  # type: google.cloud.bigquery.dbapi.cursor.Cursor
     try:
         yield cursor
@@ -41,6 +42,3 @@ def bigquery_cursor_context(db: typing.Union[str, mara_db.dbs.BigQueryDB]) \
     except Exception as e:
         connection.close()
         raise e
-    finally:
-        cursor.close()
-        connection.close()
