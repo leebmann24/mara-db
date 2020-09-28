@@ -29,6 +29,7 @@ setup(
         'test': ['pytest', 'pytest_click'],
         'bigquery':
             ['google-cloud-bigquery', # Google maintained bigquery client
+             'google-cloud-bigquery-storage', # avoid warnigns in cursor contexts
              'pyarrow', # For pandas to bigquery
              'pybigquery' # For BigQuery SQLAlchemy dialect
         ]
