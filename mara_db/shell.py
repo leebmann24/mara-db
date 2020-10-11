@@ -80,18 +80,16 @@ def __(db: dbs.RedshiftDB, timezone: str = None, echo_queries: bool = None):
 
 @query_command.register(dbs.BigQueryDB)
 def __(db: dbs.BigQueryDB, timezone: str = None, echo_queries: bool = None):
-    echo_queries = None
     assert all(v is None for v in [timezone, echo_queries]), f"unimplemented parameter for BigQueryDB"
 
     return ('bq query'
-            # global parameters
             + ' --headless'
             + ' --quiet'
-            + (f' --service_account_private_key_file={db.service_account_private_key_file}' if db.service_account_private_key_file else '')
+            # deprecated
+            + (f' --service_account_private_key_file={db.service_account_file}' if db.service_account_file else '')
             + (f' --location={db.location}' if db.location else '')
             + (f' --project_id={db.project}' if db.project else '')
             + (f' --dataset_id={db.dataset}' if db.dataset else '')
-            # command parameters
             + (f' --use_legacy_sql=' + ('true' if db.use_legacy_sql else 'false'))
             + ' ')
 
@@ -352,14 +350,13 @@ def __(db: dbs.BigQueryDB, target_table: str, csv_format: bool = None, skip_head
        delimiter_char: str = None, quote_char: str = None, null_value_string: str = None, timezone: str = None):
 
     bq_load_command = ('bq load'
-        # global parameters
         + ' --headless'
         + ' --quiet'
-        + (f' --service_account_private_key_file={db.service_account_private_key_file}' if db.service_account_private_key_file else '')
+        # deprecated
+        + (f' --service_account_private_key_file={db.service_account_file}' if db.service_account_file else '')
         + (f' --location={db.location}' if db.location else '')
         + (f' --project_id={db.project}' if db.project else '')
         + (f' --dataset_id={db.dataset}' if db.dataset else '')
-        # command parameters
         + (f' --skip_leading_rows=1' if skip_header else '')
         )
 
