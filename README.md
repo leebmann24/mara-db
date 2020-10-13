@@ -7,7 +7,7 @@
 
 Mini package for configuring and accessing multiple databases in a single project. Decouples the use of databases and their configuration by using "aliases" for databases.
  
-The file [mara_db/dbs.py](mara_db/dbs.py) contains abstract database configurations for PostgreSQL, Mysql, SQL Server, Oracle, SQLite and Big Query. The database connections of a project are configured by overwriting the `databases` function in [mara_db/config.py](mara_db/config.py):
+The file [mara_db/dbs.py](mara_db/dbs.py) contains abstract database configurations for PostgreSQL, Mysql, SQL Server, Oracle, SQLite, Big Query and DB2. The database connections of a project are configured by overwriting the `databases` function in [mara_db/config.py](mara_db/config.py):
 
 ```python
 import mara_db.config
@@ -95,6 +95,7 @@ The following **command line clients** are used to access the various databases:
 | Oracle | `sqlplus64` | See the [Oracle Instant Client](https://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html) homepage for details. On Mac, follow [these instructions](https://vanwollingen.nl/install-oracle-instant-client-and-sqlplus-using-homebrew-a233ce224bf). Then ` sudo ln -s /usr/local/bin/sqlplus /usr/local/bin/sqlplus64` to make the binary accessible as `sqlplus64`. |
 | SQLite | `sqlite3` | Available in standard distributions. Version >3.20.x required (not the case on Ubuntu 14.04). |
 | Big Query | `bq` | See the [Google Cloud SDK](https://cloud.google.com/sdk/docs/quickstarts) page for details. |
+| DB2 | `isql` | Included in unixODBC package. See the [Manpage](https://manpages.debian.org/testing/unixodbc/isql.1.en.html) for details. |
 
 &nbsp;
 
@@ -189,3 +190,10 @@ By default, files will directly loaded locally as described in [loading-local-da
 
 A BigQuery context with a python cursor is also available on demand for easy access to BigQuery databases.
 In order to use, install the official Google python client library: [google-cloud-bigquery](https://cloud.google.com/bigquery/docs/reference/libraries#client-libraries-install-python).
+
+### Optional: Installation of requirements for IBM DB2
+
+For usage with IBM DB2, the python module pyodbc and a odbc driver (e.g. IBM i Access ODBC Driver) is required which is not included in the general requirement.
+
+To see how to install pyodbc, take a look into [this install guide](https://github.com/mkleehammer/pyodbc/wiki/Install).
+To install the IBM i Access ODBC Driver, take a look into [IBM i Access - Client Solutions](https://www.ibm.com/support/pages/ibm-i-access-client-solutions) and [Downloads for IBM i Access Client Solutions](https://www-01.ibm.com/marketing/iwm/platform/mrs/assets?source=swg-ia) (IBM account required).
