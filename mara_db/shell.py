@@ -150,6 +150,19 @@ def __(db: dbs.SQLiteDB, timezone: str = None, echo_queries: bool = None):
            + '  | sqlite3 -bail ' + shlex.quote(str(db.file_name))
 
 
+@query_command.register(dbs.Db2DB)
+def __(db: dbs.Db2DB, timezone: str = None, echo_queries: bool = None):
+    assert all(v is None for v in [timezone]), "unimplemented parameter for Db2DB"
+
+    return ('isql -e -n -b -k "'
+            + (f'DRIVER={{{db.odbc_driver}}};' if db.odbc_driver else '')
+            + (f'SYSTEM={db.host};' if db.host else '')
+            + (f'DATABASE={db.database};' if db.database else '')
+            + (f'UID={db.user};' if db.user else '')
+            + (f'PWD={db.password};' if db.password else '')
+            + '"')
+
+
 # -------------------------------
 
 
@@ -251,6 +264,13 @@ def __(db: dbs.SQLiteDB, header: bool = None, footer: bool = None, delimiter_cha
     assert all(v is None for v in [footer, csv_format]), "unimplemented parameter for SQLiteDB"
     header_argument = '-noheader' if not header else ''
     return query_command(db) + " " + header_argument + f" -separator '{delimiter_char}' -quote"
+
+
+@copy_to_stdout_command.register(dbs.Db2DB)
+def __(db: dbs.Db2DB, header: bool = None, footer: bool = None, delimiter_char: str = None, csv_format: bool = None):
+    assert all(
+        v is None for v in [header, footer, delimiter_char, csv_format]), "unimplemented parameter for Db2DB"
+    return query_command(db, echo_queries=False) + " -c -x0x3B -q"
 
 
 # -------------------------------
@@ -555,3 +575,14 @@ def __(source_db: dbs.SQLiteDB, target_db: dbs.PostgreSQLDB, target_table: str,
             + '  | ' + copy_from_stdin_command(target_db, target_table=target_table, timezone=timezone,
                                                null_value_string='NULL', quote_char="''", csv_format=csv_format,
                                                delimiter_char=delimiter_char))
+
+
+@copy_command.register(dbs.Db2DB, dbs.PostgreSQLDB)
+def __(source_db: dbs.Db2DB, target_db: dbs.PostgreSQLDB, target_table: str,
+       timezone: str = None, csv_format: bool = None, delimiter_char: str = None):
+    if csv_format is None:
+        csv_format = True
+    return (copy_to_stdout_command(source_db) + ' \\\n'
+            + '  | ' + copy_from_stdin_command(target_db, target_table=target_table, csv_format=csv_format,
+                                               delimiter_char=delimiter_char,
+                                               skip_header=True, timezone=timezone))

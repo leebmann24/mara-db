@@ -123,3 +123,15 @@ class OracleDB(DB):
 class SQLiteDB(DB):
     def __init__(self, file_name: pathlib.Path) -> None:
         self.file_name = file_name
+
+
+class Db2DB(DB):
+    def __init__(self, host: str = None, database: str = None, user: str = None, password: str = None, odbc_driver: str = None):
+        self.host = host
+        self.database = database
+        self.user = user
+        self.password = password
+        if odbc_driver is None:
+            self.odbc_driver = 'IBM i Access ODBC Driver'  # default odbc driver
+        else:
+            self.odbc_driver = odbc_driver
