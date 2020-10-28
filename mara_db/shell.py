@@ -45,7 +45,7 @@ def __(alias: str, timezone: str = None, echo_queries: bool = None):
 @query_command.register(dbs.PostgreSQLDB)
 def __(db: dbs.PostgreSQLDB, timezone: str = None, echo_queries: bool = None):
     if echo_queries is None:
-        echo_queries = True
+        echo_queries = config.default_echo_queries()
 
     return (f'PGTZ={timezone or config.default_timezone()} '
             + (f"PGPASSWORD='{db.password}' " if db.password else '')
@@ -65,7 +65,7 @@ def __(db: dbs.PostgreSQLDB, timezone: str = None, echo_queries: bool = None):
 @query_command.register(dbs.RedshiftDB)
 def __(db: dbs.RedshiftDB, timezone: str = None, echo_queries: bool = None):
     if echo_queries is None:
-        echo_queries = True
+        echo_queries = config.default_echo_queries()
 
     return (f'PGTZ={timezone or config.default_timezone()} '
             + (f"PGPASSWORD='{db.password}' " if db.password else '')
@@ -113,7 +113,7 @@ def __(db: dbs.SQLServerDB, timezone: str = None, echo_queries: bool = None):
     assert all(v is None for v in [timezone]), "unimplemented parameter for SQLServerDB"
 
     if echo_queries is None:
-        echo_queries = True
+        echo_queries = config.default_echo_queries()
 
     # sqsh does not do anything when a statement is not terminated by a ';', add one to be sure
     command = "(cat && echo ';') \\\n  | "
@@ -122,7 +122,8 @@ def __(db: dbs.SQLServerDB, timezone: str = None, echo_queries: bool = None):
     return (command + 'sqsh -a 1 -d 0 -f 10'
             + (f' -U {db.user}' if db.user else '')
             + (f' -P {db.password}' if db.password else '')
-            + (f' -S {db.host}' if db.host else '')
+            + (f' -S {db.host}' if db.host and not db.port else '')
+            + (f' -S {db.host}:{db.port}' if db.host and db.port else '')
             + (f' -D {db.database}' if db.database else '')
             + (f' -e' if echo_queries else ''))
 
@@ -362,9 +363,9 @@ def __(db: dbs.RedshiftDB, target_table: str, csv_format: bool = None, skip_head
     if quote_char is not None:
         sql += f" QUOTE AS '{quote_char}'"
 
-    return s3_write_command + '\n\n' \
-           + f'{query_command(db, timezone)} \\\n      --command="{sql}"\n\n' \
-           + s3_delete_tmp_file_command
+    return s3_write_command + ' &&\n\n' \
+            + f'{query_command(db, timezone)} \\\n      --command="{sql}" \\\n  || /bin/false \\\n  ; RC=$?\n\n' \
+            + s3_delete_tmp_file_command+' &&\n  $(exit $RC) || /bin/false'
 
 
 @copy_from_stdin_command.register(dbs.BigQueryDB)
@@ -410,9 +411,9 @@ def __(db: dbs.BigQueryDB, target_table: str, csv_format: bool = None, skip_head
 
         bq_load_command += f' gs://{db.gcloud_gcs_bucket_name}/{tmp_file_name}'
 
-        return gcs_write_command + '\n\n' \
-               + bq_load_command + '\n\n' \
-               + gcs_delete_temp_file_command
+        return gcs_write_command + ' &&\n\n' \
+               + bq_load_command + ' \\\n  || /bin/false \\\n  ; RC=$?\n\n' \
+               + gcs_delete_temp_file_command+' &&\n  $(exit $RC) || /bin/false'
     else:
         return bq_load_command
 
