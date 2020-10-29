@@ -17,7 +17,9 @@ def db2_cursor_context(db: typing.Union[str, mara_db.dbs.Db2DB]) -> 'pyodbc.Curs
     assert (isinstance(db, mara_db.dbs.Db2DB))
 
     cursor = None
-    connection = pyodbc.connect(f"DRIVER={{{db.odbc_driver}}};SYSTEM={db.host};DATABASE={db.database};UID={db.user};PWD={db.password}")
+    # https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_74/rzaik/connectkeywords.htm
+    # set ALLOWUNSCHAR=1 to avoid SQL_SUCCESS_WITH_INFO odbc return code, which causes isql to append "..." on fields
+    connection = pyodbc.connect(f"DRIVER={{{db.odbc_driver}}};SYSTEM={db.host};DATABASE={db.database};UID={db.user};PWD={db.password};CONNTYPE=2;ALLOWUNSCHAR=1;")
     try:
         cursor = connection.cursor()
         yield cursor
