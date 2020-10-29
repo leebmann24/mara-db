@@ -155,13 +155,15 @@ def __(db: dbs.SQLiteDB, timezone: str = None, echo_queries: bool = None):
 def __(db: dbs.Db2DB, timezone: str = None, echo_queries: bool = None):
     assert all(v is None for v in [timezone]), "unimplemented parameter for Db2DB"
 
+    # https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_74/rzaik/connectkeywords.htm
+    # set ALLOWUNSCHAR=1 to avoid SQL_SUCCESS_WITH_INFO odbc return code, which causes isql to append "..." on fields
     return ('isql -e -n -b -k "'
             + (f'DRIVER={{{db.odbc_driver}}};' if db.odbc_driver else '')
             + (f'SYSTEM={db.host};' if db.host else '')
             + (f'DATABASE={db.database};' if db.database else '')
             + (f'UID={db.user};' if db.user else '')
             + (f'PWD={db.password};' if db.password else '')
-            + '"')
+            + 'CONNTYPE=2;ALLOWUNSCHAR=1;"')
 
 
 # -------------------------------
